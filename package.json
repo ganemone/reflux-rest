@@ -13,5 +13,8 @@
     "json"
   ],
   "author": "Giancarlo Anemone <ganemone@gmail.com> (http://www.giancarloanemone.com/)",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "superagent": "^0.21.0"
+  }
 }
