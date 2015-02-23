@@ -1,0 +1,17 @@
+{
+  "name": "reflux-rest",
+  "version": "0.0.1",
+  "description": "REST Client for Reflux",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "rest",
+    "reflux",
+    "react",
+    "json"
+  ],
+  "author": "Giancarlo Anemone <ganemone@gmail.com> (http://www.giancarloanemone.com/)",
+  "license": "ISC"
+}
