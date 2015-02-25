@@ -13,6 +13,10 @@ function createModel(resource) {
   }
 
   _createModel.prototype.toJSON = function() {
+    return this.__toJSON();
+  }
+
+  _createModel.prototype.__toJSON = function() {
     var json = {
       type: resource.name
     };
