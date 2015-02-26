@@ -1,5 +1,5 @@
 var Reflux = require('reflux');
-var request = require('browser-request');
+var request = require('superagent');
 
 function createActions(resource, methods) {
 
@@ -29,53 +29,55 @@ function createActions(resource, methods) {
 
   if (methods.GET) {
     actions.load.listen = function() {
-      request({
-        method: 'GET',
-        url: resourceUrl,
-        json: true
-      }, getCB(this.failed, this.completed));
+      request
+        .get(resourceUrl)
+        .end(getCB(this.failed, this.completed));
     }
   }
 
   if (methods.POST) {
     actions.create.listen = function(model) {
-      request({
-        method: 'POST',
-        url: resourceUrl,
-        json: model.toJSON()
-      }, getCB(this.failed, this.completed));
+      request
+        .post(resourceUrl)
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .send(model.toJSON())
+        .end(getCB(this.failed, this.completed));
     }
   }
 
   if (methods.PUT) {
     actions.put.listen = function(model) {
-      request({
-        method: 'PUT',
-        url: resourceUrl + '/' + model.id,
-        json: model.toJSON()
-      }, getCB(this.failed, this.completed));
+      request
+        .put(resourceUrl + '/' + model.id)
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .send(model.toJSON())
+        .end(getCB(this.failed, this.completed));
     }
   }
 
   if (methods.PATCH) {
     actions.patch.listen = function(model) {
-      request({
-        method: 'PATCH',
-        url: resourceUrl + '/' + model.id,
-        json: model.toJSON()
-      }, getCB(this.failed, this.completed));
+      request
+        .patch(resourceUrl + '/' + model.id)
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .send(model.toJSON())
+        .end(getCB(this.failed, this.completed));
     }
   }
 
   if (methods.DELETE) {
     actions.delete.listen = function(model) {
-      request({
-        method: 'DELETE',
-        url: resourceUrl + '/' + model.id,
-        json: model.toJSON(),
-        }, getCB(this.failed, this.completed));
+      request
+        .delete(resourceUrl + '/' + model.id)
+        .set('Accept', 'application/json')
+        .set('Content-Type', 'application/json')
+        .end(getCB(this.failed, this.completed));
     }
   }
+  return actions;
 }
 
 function getCB(errorFunc, okFunc) {
