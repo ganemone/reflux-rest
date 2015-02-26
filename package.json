@@ -15,8 +15,8 @@
   "author": "Giancarlo Anemone <ganemone@gmail.com> (http://www.giancarloanemone.com/)",
   "license": "ISC",
   "dependencies": {
-    "browser-request": "^0.3.3",
     "reflux": "^0.2.5",
+    "superagent": "^0.21.0",
     "underscore": "^1.8.2"
   },
   "devDependencies": {
