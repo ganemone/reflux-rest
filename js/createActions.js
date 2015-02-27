@@ -7,7 +7,7 @@ function createActions(resource, methods) {
   var actionConfig = {};
   var actionChildren = {
     children: ['completed', 'failed']
-  }
+  };
 
   if (methods.GET) {
     actionConfig.load = actionChildren;
@@ -32,7 +32,7 @@ function createActions(resource, methods) {
       request
         .get(resourceUrl)
         .end(getCB(this.failed, this.completed));
-    }
+    };
   }
 
   if (methods.POST) {
@@ -43,7 +43,7 @@ function createActions(resource, methods) {
         .set('Content-Type', 'application/json')
         .send(model.toJSON())
         .end(getCB(this.failed, this.completed));
-    }
+    };
   }
 
   if (methods.PUT) {
@@ -54,7 +54,7 @@ function createActions(resource, methods) {
         .set('Content-Type', 'application/json')
         .send(model.toJSON())
         .end(getCB(this.failed, this.completed));
-    }
+    };
   }
 
   if (methods.PATCH) {
@@ -65,7 +65,7 @@ function createActions(resource, methods) {
         .set('Content-Type', 'application/json')
         .send(model.toJSON())
         .end(getCB(this.failed, this.completed));
-    }
+    };
   }
 
   if (methods.DELETE) {
@@ -75,7 +75,7 @@ function createActions(resource, methods) {
         .set('Accept', 'application/json')
         .set('Content-Type', 'application/json')
         .end(getCB(this.failed, this.completed));
-    }
+    };
   }
   return actions;
 }
