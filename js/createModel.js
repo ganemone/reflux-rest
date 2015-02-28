@@ -10,11 +10,11 @@ function createModel(resource) {
         this[prop] = obj[prop];
       }
     }
-  }
+  };
 
   _createModel.prototype.toJSON = function() {
     return this.__toJSON();
-  }
+  };
 
   _createModel.prototype.__toJSON = function() {
     var json = {
@@ -26,7 +26,7 @@ function createModel(resource) {
       }
     }
     return json;
-  }
+  };
   return _createModel;
 }
 

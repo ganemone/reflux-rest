@@ -22,6 +22,7 @@ function _createResource(obj) {
   return {
     model: model,
     actions: actions,
-  }
+  };
 }
 
+module.exports = createResource;
