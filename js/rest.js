@@ -5,10 +5,11 @@ var createModel = require('./createModel');
 function createResource(obj) {
   assert.deepProperty(obj, 'resource.name');
   assert.deepProperty(obj, 'resource.structure');
-  assert.deepProperty(obj, 'methods.GET');
-  assert.deepProperty(obj, 'methods.PUT');
-  assert.deepProperty(obj, 'methods.POST');
-  assert.deepProperty(obj, 'methods.DELETE');
+  assert.deepProperty(obj, 'methods.get');
+  assert.deepProperty(obj, 'methods.put');
+  assert.deepProperty(obj, 'methods.post');
+  assert.deepProperty(obj, 'methods.patch');
+  assert.deepProperty(obj, 'methods.delete');
   return _createResource(obj);
 }
 

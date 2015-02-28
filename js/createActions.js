@@ -9,86 +9,94 @@ function createActions(resource, methods) {
     children: ['completed', 'failed']
   };
 
-  if (methods.GET) {
+  if (methods.get) {
     actionConfig.load = actionChildren;
   }
-  if (methods.POST) {
+  if (methods.post) {
     actionConfig.create = actionChildren;
   }
-  if (methods.PUT) {
+  if (methods.put) {
     actionConfig.put = actionChildren;
   }
-  if (methods.PATCH) {
+  if (methods.patch) {
     actionConfig.patch = actionChildren;
   }
-  if (methods.DELETE) {
+  if (methods.delete) {
     actionConfig.delete = actionChildren;
   }
-  if (methods.UPDATE) {
+  if (methods.update) {
     actionConfig.update = actionChildren;
+  }
+
+  // Implement API calls to other additional defined actions
+  // otherActions: [
+  // {
+  //   name: Required
+  //   endpoint: Optional - uses configuration + name if not specified
+  //   methods: [ List of Supported methods (get, put, post, etc) ]
+  // }, ...
+  // ]
+  if (methods.otherActions) {
+    for (var prop in methods.otherActions) {
+      if (methods.otherActions.hasOwnProperty(prop)) {
+        actionConfig[prop] = actionChildren;
+
+      }
+    }
   }
 
   var actions = Reflux.createActions(actionConfig);
 
-  if (methods.GET) {
-    actions.load.preEmit = function() {
-      request
-        .get(resourceUrl)
-        .end(getCB(this.failed, this.completed));
-    };
+  function getResourceURL() {
+    return resourceUrl;
   }
 
-  if (methods.POST) {
-    actions.create.preEmit = function(model) {
-      request
-        .post(resourceUrl)
-        .set('Accept', 'application/json')
-        .set('Content-Type', 'application/json')
-        .send(model.toJSON())
-        .end(getCB(this.failed, this.completed));
-    };
+  function getResourceIDURL(model) {
+    return resourceUrl + '/' + model.id;
   }
 
-  if (methods.PUT) {
-    var putFunc = function(model) {
-      request
-        .put(resourceUrl + '/' + model.id)
-        .set('Accept', 'application/json')
-        .set('Content-Type', 'application/json')
-        .send(model.toJSON())
-        .end(getCB(this.failed, this.completed));
-    };
+  if (methods.get) {
+    actions.load.preEmit = createAction('get', getResourceURL);
+  }
+
+  if (methods.post) {
+    actions.create.preEmit = createAction('post', getResourceURL, true);
+  }
+
+  if (methods.put) {
+    var putFunc = createAction('put', getResourceIDURL, true);
     actions.put.preEmit = putFunc;
-    if (methods.UPDATE === 'PUT') {
+    if (methods.update === 'put') {
       actions.update.preEmit = putFunc;
     }
   }
 
-  if (methods.PATCH) {
-    var patchFunc = function(model) {
-      request
-        .patch(resourceUrl + '/' + model.id)
-        .set('Accept', 'application/json')
-        .set('Content-Type', 'application/json')
-        .send(model.toJSON())
-        .end(getCB(this.failed, this.completed));
-    };
+  if (methods.patch) {
+    var patchFunc = createAction('patch', getResourceIDURL, true);
     actions.patch.preEmit = patchFunc;
-    if (methods.UPDATE === 'PATCH') {
+    if (methods.update === 'patch') {
       actions.update.preEmit = patchFunc;
     }
   }
 
-  if (methods.DELETE) {
-    actions.delete.preEmit = function(model) {
-      request
-        .delete(resourceUrl + '/' + model.id)
-        .set('Accept', 'application/json')
-        .set('Content-Type', 'application/json')
-        .end(getCB(this.failed, this.completed));
+  if (methods.delete) {
+    actions.delete.preEmit = createAction('delete', getResourceIDURL, true);
+  }
+  console.log('Actions: ', actions);
+  return actions;
+
+  function createAction(method, getUrl, includeBody) {
+    return function preEmit(model) {
+      var req = request[method](getUrl(model));
+      req.set('Accept', 'application/json');
+      req.set('Content-Type', 'application/json');
+      if (includeBody) {
+        req.send(model.toJSON);
+      }
+      req.end(getCB(this.failed, this.completed));
     };
   }
-  return actions;
+
 }
 
 function getCB(errorFunc, okFunc) {
