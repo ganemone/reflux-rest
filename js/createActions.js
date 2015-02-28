@@ -24,11 +24,14 @@ function createActions(resource, methods) {
   if (methods.DELETE) {
     actionConfig.delete = actionChildren;
   }
+  if (methods.UPDATE) {
+    actionConfig.update = actionChildren;
+  }
 
   var actions = Reflux.createActions(actionConfig);
 
   if (methods.GET) {
-    actions.load.listen = function() {
+    actions.load.preEmit = function() {
       request
         .get(resourceUrl)
         .end(getCB(this.failed, this.completed));
@@ -36,7 +39,7 @@ function createActions(resource, methods) {
   }
 
   if (methods.POST) {
-    actions.create.listen = function(model) {
+    actions.create.preEmit = function(model) {
       request
         .post(resourceUrl)
         .set('Accept', 'application/json')
@@ -47,7 +50,7 @@ function createActions(resource, methods) {
   }
 
   if (methods.PUT) {
-    actions.put.listen = function(model) {
+    var putFunc = function(model) {
       request
         .put(resourceUrl + '/' + model.id)
         .set('Accept', 'application/json')
@@ -55,10 +58,14 @@ function createActions(resource, methods) {
         .send(model.toJSON())
         .end(getCB(this.failed, this.completed));
     };
+    actions.put.preEmit = putFunc;
+    if (methods.UPDATE === 'PUT') {
+      actions.update.preEmit = putFunc;
+    }
   }
 
   if (methods.PATCH) {
-    actions.patch.listen = function(model) {
+    var patchFunc = function(model) {
       request
         .patch(resourceUrl + '/' + model.id)
         .set('Accept', 'application/json')
@@ -66,10 +73,14 @@ function createActions(resource, methods) {
         .send(model.toJSON())
         .end(getCB(this.failed, this.completed));
     };
+    actions.patch.preEmit = patchFunc;
+    if (methods.UPDATE === 'PATCH') {
+      actions.update.preEmit = patchFunc;
+    }
   }
 
   if (methods.DELETE) {
-    actions.delete.listen = function(model) {
+    actions.delete.preEmit = function(model) {
       request
         .delete(resourceUrl + '/' + model.id)
         .set('Accept', 'application/json')
@@ -84,6 +95,9 @@ function getCB(errorFunc, okFunc) {
   return function _cb(error, response) {
     if (error) {
       return errorFunc(error);
+    }
+    if (response.status >= 400) {
+      return errorFunc(null, response);
     }
     return okFunc(response);
   };
