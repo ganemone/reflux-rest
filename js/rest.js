@@ -15,10 +15,9 @@ function createResource(obj) {
 
 function _createResource(obj) {
   var resource = obj.resource;
-  var methods = obj.methods;
-
+  resource.name += 's';
   var model = createModel(resource);
-  var actions = createActions(resource, methods);
+  var actions = createActions(obj);
 
   return {
     model: model,
