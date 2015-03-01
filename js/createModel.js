@@ -18,11 +18,13 @@ function createModel(resource) {
 
   _createModel.prototype.__toJSON = function() {
     var json = {
-      type: resource.name
+      data: {
+        type: resource.name
+      }
     };
     for (var prop in resource.structure) {
       if (resource.structure.hasOwnProperty(prop)) {
-        json[prop] = this[prop];
+        json.data[prop] = this[prop];
       }
     }
     return json;
