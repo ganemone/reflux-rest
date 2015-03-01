@@ -1,70 +1,76 @@
 var Reflux = require('reflux');
 var request = require('superagent');
 
-function createActions(resource, methods) {
+var methodMap = {
+  get: 'load',
+  post: 'create',
+  put: 'put',
+  patch: 'patch',
+  delete: 'delete',
+  update: 'update'
+};
 
+var includeBodyMap = {
+  'get': false,
+  'post': true,
+  'patch': true,
+  'put': true,
+  'delete': false
+};
+
+var urlMap = {
+  'get': 'base',
+  'post': 'base',
+  'patch': 'id',
+  'put': 'id',
+  'delete': 'id'
+};
+
+function createActions(obj) {
+
+  var resource = obj.resource;
+  var methods = obj.methods;
+  var otherActions = obj.otherActions;
   var resourceUrl = '/' + resource.name;
   var actionConfig = {};
   var actionChildren = {
     children: ['completed', 'failed']
   };
 
-  if (methods.get) {
-    actionConfig.load = actionChildren;
-  }
-  if (methods.post) {
-    actionConfig.create = actionChildren;
-  }
-  if (methods.put) {
-    actionConfig.put = actionChildren;
-  }
-  if (methods.patch) {
-    actionConfig.patch = actionChildren;
-  }
-  if (methods.delete) {
-    actionConfig.delete = actionChildren;
-  }
-  if (methods.update) {
-    actionConfig.update = actionChildren;
-  }
-
-  // Implement API calls to other additional defined actions
-  // otherActions: [
-  // {
-  //   name: Required
-  //   endpoint: Optional - uses configuration + name if not specified
-  //   methods: [ List of Supported methods (get, put, post, etc) ]
-  // }, ...
-  // ]
-  if (methods.otherActions) {
-    for (var prop in methods.otherActions) {
-      if (methods.otherActions.hasOwnProperty(prop)) {
-        actionConfig[prop] = actionChildren;
-
-      }
+  for (var method in methods) {
+    if (methods.hasOwnProperty(method)) {
+      actionConfig[methodMap[method]] = actionChildren;
     }
   }
 
-  var actions = Reflux.createActions(actionConfig);
+  // Add other actions to action config
+  otherActions.forEach(function(action) {
+    actionConfig[action.name] = actionChildren;
+  });
 
-  function getResourceURL() {
-    return resourceUrl;
+  var actions = Reflux.createActions(actionConfig);
+  for (method in methods) {
+    if (methods.hasOwnProperty(method) && method !== 'update') {
+      actions[methodMap[method]].preEmit = createAction(method, resourceUrl);
+    }
   }
 
-  function getResourceIDURL(model) {
-    return resourceUrl + '/' + model.id;
+  if (methods.update === 'patch') {
+    actions.update.preEmit = actions.patch.preEmit;
+  } else if (methods.update === 'put') {
+    actions.upodate.preEmit = actions.put.preEmit;
   }
 
   if (methods.get) {
-    actions.load.preEmit = createAction('get', getResourceURL);
+    actions.load.preEmit = createAction('get', resourceUrl);
   }
 
   if (methods.post) {
-    actions.create.preEmit = createAction('post', getResourceURL, true);
+    actions.create.preEmit = createAction('post', resourceUrl);
   }
 
   if (methods.put) {
-    var putFunc = createAction('put', getResourceIDURL, true);
+    var putFunc = createAction('put', resourceUrl);
     actions.put.preEmit = putFunc;
     if (methods.update === 'put') {
       actions.update.preEmit = putFunc;
@@ -72,7 +78,7 @@ function createActions(resource, methods) {
   }
 
   if (methods.patch) {
-    var patchFunc = createAction('patch', getResourceIDURL, true);
+    var patchFunc = createAction('patch', resourceUrl);
     actions.patch.preEmit = patchFunc;
     if (methods.update === 'patch') {
       actions.update.preEmit = patchFunc;
@@ -80,23 +86,48 @@ function createActions(resource, methods) {
   }
 
   if (methods.delete) {
-    actions.delete.preEmit = createAction('delete', getResourceIDURL, true);
+    actions.delete.preEmit = createAction('delete', resourceUrl);
   }
-  console.log('Actions: ', actions);
-  return actions;
 
-  function createAction(method, getUrl, includeBody) {
-    return function preEmit(model) {
-      var req = request[method](getUrl(model));
-      req.set('Accept', 'application/json');
-      req.set('Content-Type', 'application/json');
-      if (includeBody) {
-        req.send(model.toJSON);
+  // Implement API calls to other additional defined actions
+  // otherActions: [
+  // {
+  //   name: Required
+  //   endpoint: Optional - uses configuration + name if not specified
+  //   excludeBody: optional - rare case where a put/post/patch request
+  //   has no body
+  //   methods: [ List of Supported methods (get, put, post, etc) ]
+  // }, ...
+  // ]
+  if (otherActions) {
+    otherActions.forEach(function(action) {
+      var url = action.name;
+      if (action.endpoint) {
+        url = action.endpoint;
       }
-      req.end(getCB(this.failed, this.completed));
-    };
+      actions[action.name].preEmit = createAction(action.method, url, action.excludeBody);
+    });
   }
+  return actions;
+}
 
+function createAction(method, baseURL, excludeBody) {
+  return function preEmit(model) {
+    var url;
+    if (urlMap[method] === 'base') {
+      url = baseURL;
+    } else {
+      url = baseURL + '/' + model.id;
+    }
+
+    var req = request[method](url);
+    req.set('Accept', 'application/json');
+    req.set('Content-Type', 'application/json');
+    if (includeBodyMap[method] && !excludeBody) {
+      req.send(model.toJSON);
+    }
+    req.end(getCB(this.failed, this.completed));
+  };
 }
 
 function getCB(errorFunc, okFunc) {
@@ -110,7 +141,5 @@ function getCB(errorFunc, okFunc) {
     return okFunc(response);
   };
 }
-
-
 
 module.exports = createActions;
