@@ -2,6 +2,7 @@ var assert = require('chai').assert;
 var createActions = require('./createActions');
 var createModel = require('./createModel');
 
+
 function createResource(obj) {
   assert.deepProperty(obj, 'resource.name');
   assert.deepProperty(obj, 'resource.structure');

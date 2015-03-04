@@ -124,7 +124,7 @@ function createAction(method, baseURL, excludeBody) {
     req.set('Accept', 'application/json');
     req.set('Content-Type', 'application/json');
     if (includeBodyMap[method] && !excludeBody) {
-      req.send(model.toJSON);
+      req.send(model.toJSON());
     }
     req.end(getCB(this.failed, this.completed));
   };
